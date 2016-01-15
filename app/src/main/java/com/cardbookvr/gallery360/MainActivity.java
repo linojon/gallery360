@@ -15,7 +15,7 @@ import com.google.vrtoolkit.cardboard.CardboardView;
 public class MainActivity extends CardboardActivity implements IRenderBox {
     final String TAG = "MainActivity";
 
-    final int DEFAULT_PHOTO = R.drawable.sample360;
+    final int DEFAULT_PHOTO = R.drawable.bg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
