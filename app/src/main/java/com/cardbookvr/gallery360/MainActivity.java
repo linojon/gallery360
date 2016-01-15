@@ -1,8 +1,6 @@
 package com.cardbookvr.gallery360;
 
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import com.cardbook.renderbox.IRenderBox;
 import com.cardbook.renderbox.RenderBox;
@@ -30,10 +28,15 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     @Override
     public void setup() {
-        Transform background = new Transform();
-        background.setParent(RenderBox.mainCamera.transform, false);
-        background.setLocalScale(-Camera.Z_FAR, -Camera.Z_FAR, -Camera.Z_FAR);
-        background.addComponent(new Sphere(DEFAULT_PHOTO, false));
+        Transform background = new Transform()
+                .setLocalScale(-Camera.Z_FAR, -Camera.Z_FAR, -Camera.Z_FAR)
+                .addComponent(new Sphere(DEFAULT_PHOTO, false));
+
+        Transform screen = new Transform()
+                .setLocalScale(4, 4, 1)
+                .setLocalPosition(0, 0, 5)
+                .setLocalRotation(0, 0, 180)
+                .addComponent(new Plane(R.drawable.sample360, false));
     }
 
     @Override
@@ -46,25 +49,4 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
