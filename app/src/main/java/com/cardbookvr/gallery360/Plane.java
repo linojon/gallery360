@@ -49,6 +49,7 @@ public class Plane extends RenderObject {
     private static ShortBuffer indexBuffer;
     static final int numIndices = 6;
 
+    static boolean setup;
 
     public Plane(){
         super();
@@ -66,7 +67,8 @@ public class Plane extends RenderObject {
     }
 
     public static void allocateBuffers(){
-        if (vertexBuffer != null) return;
+        if (setup) return;
+        setup = true;
         vertexBuffer = allocateFloatBuffer(COORDS);
         texCoordBuffer = allocateFloatBuffer(TEX_COORDS);
         colorBuffer = allocateFloatBuffer(COLORS);
@@ -86,5 +88,15 @@ public class Plane extends RenderObject {
         mat.setBuffers(vertexBuffer, texCoordBuffer, indexBuffer, numIndices);
         material = mat;
         return this;
+    }
+
+    public void setupUnlitTexMaterial(UnlitTexMaterial material){
+        this.material = material;
+        material.setBuffers(vertexBuffer, texCoordBuffer, indexBuffer, numIndices);
+    }
+
+    public void setupBorderMaterial(BorderMaterial material){
+        this.material = material;
+        material.setBuffers(vertexBuffer, texCoordBuffer, indexBuffer, numIndices);
     }
 }
