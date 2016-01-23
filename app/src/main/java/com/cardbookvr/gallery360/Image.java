@@ -65,7 +65,7 @@ public class Image {
     }
 
     public void loadTexture(CardboardView cardboardView, int sampleSize){
-//        loadLock = true;
+        loadLock = true;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = sampleSize;
         final Bitmap bitmap = BitmapFactory.decodeFile(path, options);
@@ -74,17 +74,17 @@ public class Image {
         }
         width = options.outWidth;
         height = options.outHeight;
-//        cardboardView.queueEvent(new Runnable() {
-//                                     @Override
-//                                     public void run() {
-//                                         if (MainActivity.cancelUpdate)
-//                                             return;
+        cardboardView.queueEvent(new Runnable() {
+                                     @Override
+                                     public void run() {
+                                         if (MainActivity.cancelUpdate)
+                                             return;
                                          textureHandle = bitmapToTexture(bitmap);
-//                                         bitmap.recycle();
-//                                         loadLock = false;
-//                                     }
-//                                 }
-//        );
+                                         bitmap.recycle();
+                                         loadLock = false;
+                                     }
+                                 }
+        );
     }
 
     public static int bitmapToTexture(Bitmap bitmap){
