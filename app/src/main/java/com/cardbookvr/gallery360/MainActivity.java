@@ -8,6 +8,7 @@ import com.cardbook.renderbox.RenderBox;
 import com.cardbook.renderbox.Transform;
 import com.cardbook.renderbox.components.Camera;
 import com.cardbook.renderbox.components.Sphere;
+import com.cardbook.renderbox.materials.UnlitTexMaterial;
 import com.google.vrtoolkit.cardboard.CardboardActivity;
 import com.google.vrtoolkit.cardboard.CardboardView;
 
@@ -19,13 +20,15 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     final String TAG = "MainActivity";
     public static boolean cancelUpdate;
 
-    final int DEFAULT_PHOTO = R.drawable.bg;
+    final int DEFAULT_BACKGROUND = R.drawable.bg;
     final String imagesPath = "/storage/emulated/0/DCIM/Camera";
 
     final List<Image> images = new ArrayList<>();
 
     CardboardView cardboardView;
     Plane screen;
+    Sphere photosphere;
+    int bgTextureHandle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,12 +65,17 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         setupScreen();
         loadImageList(imagesPath);
         showImage(images.get(0));
+        showImage(images.get(images.size()-1));
+        showImage(images.get(2));
     }
 
     void setupBackground() {
+        photosphere = new Sphere(DEFAULT_BACKGROUND, false);
         new Transform()
                 .setLocalScale(-Camera.Z_FAR, -Camera.Z_FAR, -Camera.Z_FAR)
-                .addComponent(new Sphere(DEFAULT_PHOTO, false));
+                .addComponent(photosphere);
+        UnlitTexMaterial mat = (UnlitTexMaterial) photosphere.getMaterial();
+        bgTextureHandle = mat.getTexture();
     }
 
     void setupScreen() {
@@ -84,8 +92,21 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     }
 
     void showImage(Image image) {
-        image.show(cardboardView, screen, 4f);
+        UnlitTexMaterial bgMaterial = (UnlitTexMaterial) photosphere.getMaterial();
+        Log.d(TAG, "!!! "+bgMaterial.name);
+//        image.clear();
+        image.loadFullTexture(cardboardView);
+        if (image.isPhotosphere()) {
+            Log.d(TAG,"!!! is photosphere");
+            bgMaterial.setTexture(image.textureHandle);
+            screen.enabled = false;
+        } else {
+            bgMaterial.setTexture(bgTextureHandle);
+            screen.enabled = true;
+            image.show(cardboardView, screen, 4f);
+        }
     }
+
 
     @Override
     public void preDraw() {

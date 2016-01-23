@@ -32,8 +32,21 @@ public class Image {
 
     public static boolean isValidImage(String path){
         String extension = getExtension(path);
-        Log.d(TAG, extension);
-        return extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png");
+        if(extension == null)
+            return false;
+        switch (extension){
+            case "jpg":
+                return true;
+            case "jpeg":
+                return true;
+            case "png":
+                return true;
+        }
+        return false;
+    }
+
+    public boolean isPhotosphere() {
+        return path.toLowerCase().contains("pano");
     }
 
     static String getExtension(String path){
@@ -65,7 +78,7 @@ public class Image {
     }
 
     public void loadTexture(CardboardView cardboardView, int sampleSize){
-        loadLock = true;
+//        loadLock = true;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = sampleSize;
         final Bitmap bitmap = BitmapFactory.decodeFile(path, options);
@@ -74,17 +87,17 @@ public class Image {
         }
         width = options.outWidth;
         height = options.outHeight;
-        cardboardView.queueEvent(new Runnable() {
-                                     @Override
-                                     public void run() {
-                                         if (MainActivity.cancelUpdate)
-                                             return;
+//        cardboardView.queueEvent(new Runnable() {
+//                                     @Override
+//                                     public void run() {
+//                                         if (MainActivity.cancelUpdate)
+//                                             return;
                                          textureHandle = bitmapToTexture(bitmap);
-                                         bitmap.recycle();
-                                         loadLock = false;
-                                     }
-                                 }
-        );
+//                                         bitmap.recycle();
+//                                         loadLock = false;
+//                                     }
+//                                 }
+//        );
     }
 
     public static int bitmapToTexture(Bitmap bitmap){
@@ -126,6 +139,14 @@ public class Image {
         }
     }
 
+//    public void clear(){
+//        textureHandle = 0;
+//        height = 0;
+//        width = 0;
+//        rotation = null;
+//        //TODO: unbind texture;
+//    }
+
     void calcRotation(){
         rotation = null;
 
@@ -138,6 +159,7 @@ public class Image {
             ExifInterface exif = new ExifInterface(path);
             //height = exif.getAttribute(ExifInterface.TAG_I);
             //rotation = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
+            Log.d(TAG, "ORIENTATION: " + exif.getAttribute(ExifInterface.TAG_ORIENTATION) );
             switch (exif.getAttribute(ExifInterface.TAG_ORIENTATION)){
                 // Correct orientation, but flipped on the horizontal axis
                 case "2":
