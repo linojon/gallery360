@@ -65,7 +65,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     }
 
     void showImage(Image image) {
-        image.show(cardboardView, screen);
+        image.show(cardboardView, screen, 4f);
     }
 
     @Override
