@@ -17,6 +17,7 @@ import java.util.List;
 
 public class MainActivity extends CardboardActivity implements IRenderBox {
     final String TAG = "MainActivity";
+    public static boolean cancelUpdate;
 
     final int DEFAULT_PHOTO = R.drawable.bg;
     final String imagesPath = "/storage/emulated/0/DCIM/Camera";
@@ -28,6 +29,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        cancelUpdate = false;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -36,6 +38,23 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         cardboardView.setRenderer(new RenderBox(this, this));
         setCardboardView(cardboardView);
     }
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+        cancelUpdate = true;
+    }
+    @Override
+    protected void onResume(){
+        super.onResume();
+        cancelUpdate = false;
+    }
+    @Override
+    protected void onPause(){
+        super.onPause();
+        cancelUpdate = true;
+    }
+
 
     @Override
     public void setup() {

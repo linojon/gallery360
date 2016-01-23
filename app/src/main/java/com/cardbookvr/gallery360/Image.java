@@ -18,10 +18,13 @@ import java.io.IOException;
  */
 public class Image {
     final static String TAG = "image";
+    public static boolean loadLock = false;
     String path;
     int textureHandle;
     Quaternion rotation;
     int height, width;
+
+    static int MAX_TEXTURE_SIZE = 2048;
 
     public Image(String path) {
         this.path = path;
@@ -40,15 +43,48 @@ public class Image {
         return split[split.length - 1].toLowerCase();
     }
 
-    public void loadTexture(CardboardView cardboardView){
+    public void loadFullTexture(CardboardView cardboardView) {
+        // search for best size
+        int sampleSize = 1;
         BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        do {
+            options.inSampleSize = sampleSize;
+            BitmapFactory.decodeFile(path, options);
+            sampleSize *= 2;
+        } while (options.outWidth > MAX_TEXTURE_SIZE || options.outHeight > MAX_TEXTURE_SIZE);
+        sampleSize /= 2;
+        loadTexture(cardboardView, sampleSize);
+        while (loadLock){
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void loadTexture(CardboardView cardboardView, int sampleSize){
+//        loadLock = true;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sampleSize;
         final Bitmap bitmap = BitmapFactory.decodeFile(path, options);
         if(bitmap == null){
             throw new RuntimeException("Error loading bitmap.");
         }
-        width = bitmap.getWidth();
-        height = bitmap.getHeight();
-        textureHandle = bitmapToTexture(bitmap);
+        width = options.outWidth;
+        height = options.outHeight;
+//        cardboardView.queueEvent(new Runnable() {
+//                                     @Override
+//                                     public void run() {
+//                                         if (MainActivity.cancelUpdate)
+//                                             return;
+                                         textureHandle = bitmapToTexture(bitmap);
+//                                         bitmap.recycle();
+//                                         loadLock = false;
+//                                     }
+//                                 }
+//        );
     }
 
     public static int bitmapToTexture(Bitmap bitmap){
@@ -77,7 +113,7 @@ public class Image {
 
     public void show(CardboardView cardboardView, Plane screen, float scaleFactor) {
         BorderMaterial material = (BorderMaterial) screen.getMaterial();
-        loadTexture(cardboardView);
+        loadFullTexture(cardboardView);
         material.setTexture(textureHandle);
         calcRotation();
         if (rotation != null) {
