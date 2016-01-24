@@ -124,7 +124,7 @@ public class Image {
         return textureHandle[0];
     }
 
-    public void show(CardboardView cardboardView, Plane screen, float scaleFactor) {
+    public void show(CardboardView cardboardView, Plane screen) {
         BorderMaterial material = (BorderMaterial) screen.getMaterial();
         loadFullTexture(cardboardView);
         material.setTexture(textureHandle);
@@ -133,9 +133,9 @@ public class Image {
             screen.transform.setLocalRotation(new Quaternion(rotation));
         }
         if (width > 0 && width > height) {
-            screen.transform.setLocalScale(scaleFactor, (scaleFactor * height / width), 1);
+            screen.transform.setLocalScale(1, (float) height / width, 1);
         } else if(height > 0) {
-            screen.transform.setLocalScale((scaleFactor * width / height), scaleFactor, 1);
+            screen.transform.setLocalScale((float) width / height, 1, 1);
         }
     }
 

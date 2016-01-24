@@ -7,6 +7,7 @@ import com.cardbook.renderbox.IRenderBox;
 import com.cardbook.renderbox.RenderBox;
 import com.cardbook.renderbox.Transform;
 import com.cardbook.renderbox.components.Camera;
+import com.cardbook.renderbox.components.RenderObject;
 import com.cardbook.renderbox.components.Sphere;
 import com.cardbook.renderbox.materials.UnlitTexMaterial;
 import com.google.vrtoolkit.cardboard.CardboardActivity;
@@ -64,9 +65,9 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         setupBackground();
         setupScreen();
         loadImageList(imagesPath);
-        showImage(images.get(0));
-        showImage(images.get(images.size()-1));
-        showImage(images.get(2));
+//        showImage(images.get(0));
+//        showImage(images.get(images.size()-1));
+        showImage(images.get(3));
     }
 
     void setupBackground() {
@@ -78,18 +79,85 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         bgTextureHandle = mat.getTexture();
     }
 
-    void setupScreen() {
-        BorderMaterial screenMaterial = new BorderMaterial();
-        //screenMaterial.setTexture(RenderObject.loadTexture(R.drawable.sample360));
-        screen = new Plane();
-        screen.setupBorderMaterial(screenMaterial);
+//    // Version A
+//    void setupScreen() {
+//        screen = new Plane(R.drawable.sample360, false);
+//        new Transform()
+//                .setLocalScale(4, 4, 1)
+//                .setLocalPosition(0, 0, -5)
+//                .setLocalRotation(0, 180, 180)
+//                .addComponent(screen);
+//    }
 
-        new Transform()
+//    // Version B
+//    void setupScreen() {
+//        Transform screenRoot = new Transform()
+//                .setLocalScale(4, 4, 1)
+//                .setLocalPosition(0, 0, -5)
+//                .setLocalRotation(0, 180, 0);
+//
+//        screen = new Plane(R.drawable.sample360, false);
+//        new Transform()
+//                .setParent(screenRoot, false)
+//                .setLocalRotation(0, 0, 180)
+//                .addComponent(screen);
+//    }
+
+    // Version C
+    void setupScreen() {
+        Transform screenRoot = new Transform()
                 .setLocalScale(4, 4, 1)
-                .setLocalPosition(0, 0, 5)
+                .setLocalPosition(0, 0, -5)
+                .setLocalRotation(0, 180, 0);
+
+        screen = new Plane(R.drawable.sample360, false);
+        new Transform()
+                .setParent(screenRoot, false)
                 .setLocalRotation(0, 0, 180)
                 .addComponent(screen);
+
+        BorderMaterial screenMaterial = new BorderMaterial();
+        screenMaterial.setTexture(RenderObject.loadTexture(R.drawable.sample360));
+        screen.setupBorderMaterial(screenMaterial);
     }
+
+//    void setupScreen() {
+//        Transform screenRoot = new Transform()
+//                .setLocalScale(4, 4, 1)
+//                .setLocalRotation(0, 180, 0)
+//                .setLocalPosition(0, 0, -5);
+//
+////        screen = new Plane();
+//        screen = new Plane(R.drawable.sample360, false);
+//
+//        new Transform()
+//                .setParent(screenRoot, false)
+//                .setLocalRotation(0, 0, 180)
+//                .addComponent(screen);
+//
+////        BorderMaterial screenMaterial = new BorderMaterial();
+////        screenMaterial.setTexture(RenderObject.loadTexture(R.drawable.sample360));
+////        screen.setupBorderMaterial(screenMaterial);
+//    }
+
+
+
+//    void setupScreen() {
+//        Transform screenRoot = new Transform()
+//                .setLocalScale(4, 4, 1)
+//                .setLocalRotation(0, -90, 0)
+//                .setLocalPosition(-5, 0, 0);
+//
+//        screen = new Plane();
+//        new Transform()
+//                .setParent(screenRoot, false)
+//                .setLocalRotation(0, 0, 180)
+//                .addComponent(screen);
+//
+//        BorderMaterial screenMaterial = new BorderMaterial();
+//        screenMaterial.setTexture(RenderObject.loadTexture(R.drawable.sample360));
+//        screen.setupBorderMaterial(screenMaterial);
+//    }
 
     void showImage(Image image) {
         UnlitTexMaterial bgMaterial = (UnlitTexMaterial) photosphere.getMaterial();
@@ -103,7 +171,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         } else {
             bgMaterial.setTexture(bgTextureHandle);
             screen.enabled = true;
-            image.show(cardboardView, screen, 4f);
+            image.show(cardboardView, screen);
         }
     }
 
