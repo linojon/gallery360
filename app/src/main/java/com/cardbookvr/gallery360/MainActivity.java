@@ -46,6 +46,10 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     private Vibrator vibrator;
 
+    Triangle up, down;
+    BorderMaterial upMaterial, downMaterial;
+    boolean upSelected, downSelected;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         cancelUpdate = false;
@@ -82,6 +86,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         setupScreen();
         loadImageList(imagesPath);
         setupThumbnailGrid();
+        setupScrollButtons();
         updateThumbnails();
 //        showImage(images.get(0));
 //        showImage(images.get(images.size()-1));
@@ -130,6 +135,23 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
                 count++;
             }
         }
+    }
+
+    void setupScrollButtons() {
+        up = new Triangle();
+        upMaterial = new BorderMaterial();
+        up.setupBorderMaterial(upMaterial);
+        new Transform()
+                .setLocalPosition(0, 6, -5)
+                .addComponent(up);
+
+        down = new Triangle();
+        downMaterial = new BorderMaterial();
+        down.setupBorderMaterial(downMaterial);
+        new Transform()
+                .setLocalPosition(0, -6, -5)
+                .setLocalRotation(0, 0, 180)
+                .addComponent(down);
     }
 
     void updateThumbnails() {
@@ -188,6 +210,22 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             }
             iThumbnail++;
         }
+
+        if (up.isLooking) {
+            upSelected = true;
+            upMaterial.borderColor = selectedColor;
+        } else {
+            upSelected = false;
+            upMaterial.borderColor = normalColor;
+        }
+
+        if (down.isLooking) {
+            downSelected = true;
+            downMaterial.borderColor = selectedColor;
+        } else {
+            downSelected = false;
+            downMaterial.borderColor = normalColor;
+        }
     }
 
     @Override
@@ -195,7 +233,19 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         String TAG = "onCardoboardTrigger";
         Log.d(TAG, ""+selectedThumbnail);
         if (selectedThumbnail > -1) {
-            showImage(images.get(selectedThumbnail));
+            final Image image = images.get(selectedThumbnail);
+            cardboardView.queueEvent(new Runnable() {
+                @Override
+                public void run() {
+                    showImage(image);
+                }
+            });
+        }
+        if (upSelected) {
+            // scroll up
+        }
+        if (downSelected) {
+            // scroll down
         }
         vibrator.vibrate(25);
     }
