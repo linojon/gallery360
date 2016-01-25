@@ -68,13 +68,13 @@ public class Image {
         } while (options.outWidth > MAX_TEXTURE_SIZE || options.outHeight > MAX_TEXTURE_SIZE);
         sampleSize /= 2;
         loadTexture(cardboardView, sampleSize);
-        while (loadLock){
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+//        while (loadLock){
+//            try {
+//                Thread.sleep(100);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     public void loadTexture(CardboardView cardboardView, int sampleSize){
@@ -125,19 +125,21 @@ public class Image {
     }
 
     public void show(CardboardView cardboardView, Plane screen) {
-        BorderMaterial material = (BorderMaterial) screen.getMaterial();
         loadFullTexture(cardboardView);
+        BorderMaterial material = (BorderMaterial) screen.getMaterial();
         material.setTexture(textureHandle);
-        calcRotation();
-        if (rotation != null) {
-            screen.transform.setLocalRotation(new Quaternion(rotation));
-        }
-        if (width > 0 && width > height) {
-            screen.transform.setLocalScale(1, (float) height / width, 1);
-        } else if(height > 0) {
-            screen.transform.setLocalScale((float) width / height, 1, 1);
-        }
+        calcRotation(screen);
+        calcScale(screen);
     }
+
+    public void showThumbnail(CardboardView cardboardView, Plane thumb) {
+        loadTexture(cardboardView, 4);
+        BorderMaterial material = (BorderMaterial) thumb.getMaterial();
+        material.setTexture(textureHandle);
+        calcRotation(thumb);
+        calcScale(thumb);
+    }
+
 
 //    public void clear(){
 //        textureHandle = 0;
@@ -147,7 +149,7 @@ public class Image {
 //        //TODO: unbind texture;
 //    }
 
-    void calcRotation(){
+    void calcRotation(Plane screen){
         rotation = null;
 
         // use Exif tags to determine orientation, only available in jpg (and jpeg)
@@ -196,5 +198,17 @@ public class Image {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        if (rotation != null) {
+            screen.transform.setLocalRotation(new Quaternion(rotation));
+        }
     }
+
+    void calcScale(Plane screen) {
+        if (width > 0 && width > height) {
+            screen.transform.setLocalScale(1, (float) height / width, 1);
+        } else if(height > 0) {
+            screen.transform.setLocalScale((float) width / height, 1, 1);
+        }
+    }
+
 }

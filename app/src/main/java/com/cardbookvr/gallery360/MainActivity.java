@@ -134,7 +134,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
                 if(count < thumbnails.size() && count < images.size()) {
                     Plane imgPlane = thumbnails.get(count);
                     Image image = images.get(count);
-                    image.show(cardboardView, imgPlane);
+                    image.showThumbnail(cardboardView, imgPlane);
                 }
                 count++;
             }
@@ -202,7 +202,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         Log.d(TAG, "Length: "+ file.length);
         if (file==null)
             return 0;
-//        for(int j = 0; j < 5; j++) { //Artificially duplicate image list
+        for(int j = 0; j < 5; j++) { //Artificially duplicate image list
             for (int i = 0; i < file.length; i++) {
                 if (Image.isValidImage(file[i].getName())) {
                     Image img = new Image(path + "/" + file[i].getName());
@@ -210,7 +210,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
                     Log.d(TAG, file[i].getName());
                 }
             }
-//        }
+        }
         return file.length;
     }
 }
