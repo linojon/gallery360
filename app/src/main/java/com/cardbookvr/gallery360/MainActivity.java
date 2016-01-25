@@ -1,6 +1,8 @@
 package com.cardbookvr.gallery360;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
 
 import com.cardbook.renderbox.IRenderBox;
@@ -42,6 +44,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     final float[] normalColor = new float[]{0, 0, 0, 1};
     int selectedThumbnail = -1;
 
+    private Vibrator vibrator;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         cancelUpdate = false;
@@ -52,6 +56,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         cardboardView.setRestoreGLStateEnabled(false);
         cardboardView.setRenderer(new RenderBox(this, this));
         setCardboardView(cardboardView);
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -192,6 +197,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         if (selectedThumbnail > -1) {
             showImage(images.get(selectedThumbnail));
         }
+        vibrator.vibrate(25);
     }
 
     int loadImageList(String path) {
