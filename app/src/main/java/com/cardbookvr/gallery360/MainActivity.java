@@ -19,17 +19,28 @@ import java.util.List;
 
 public class MainActivity extends CardboardActivity implements IRenderBox {
     final String TAG = "MainActivity";
+
+    final int GRID_X = 5;
+    final int GRID_Y = 3;
+
     public static boolean cancelUpdate;
 
     final int DEFAULT_BACKGROUND = R.drawable.bg;
     final String imagesPath = "/storage/emulated/0/DCIM/Camera";
 
     final List<Image> images = new ArrayList<>();
+    final List<Plane> thumbnails = new ArrayList<>();
+    static int thumbnailsStartOffset = 0;
 
     CardboardView cardboardView;
     Plane screen;
     Sphere photosphere;
     int bgTextureHandle;
+
+    final float[] selectedColor = new float[]{0, 0.5f, 0.5f, 1};
+    final float[] invalidColor = new float[]{0.5f, 0, 0, 1};
+    final float[] normalColor = new float[]{0, 0, 0, 1};
+    int selectedThumbnail = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +76,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         setupBackground();
         setupScreen();
         loadImageList(imagesPath);
+        setupThumbnailGrid();
+        updateThumbnails();
 //        showImage(images.get(0));
 //        showImage(images.get(images.size()-1));
         showImage(images.get(3));
@@ -79,36 +92,11 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         bgTextureHandle = mat.getTexture();
     }
 
-//    // Version A
-//    void setupScreen() {
-//        screen = new Plane(R.drawable.sample360, false);
-//        new Transform()
-//                .setLocalScale(4, 4, 1)
-//                .setLocalPosition(0, 0, -5)
-//                .setLocalRotation(0, 180, 180)
-//                .addComponent(screen);
-//    }
-
-//    // Version B
-//    void setupScreen() {
-//        Transform screenRoot = new Transform()
-//                .setLocalScale(4, 4, 1)
-//                .setLocalPosition(0, 0, -5)
-//                .setLocalRotation(0, 180, 0);
-//
-//        screen = new Plane(R.drawable.sample360, false);
-//        new Transform()
-//                .setParent(screenRoot, false)
-//                .setLocalRotation(0, 0, 180)
-//                .addComponent(screen);
-//    }
-
-    // Version C
     void setupScreen() {
         Transform screenRoot = new Transform()
                 .setLocalScale(4, 4, 1)
-                .setLocalPosition(0, 0, -5)
-                .setLocalRotation(0, 180, 0);
+                .setLocalPosition(-5, 0, 0)
+                .setLocalRotation(0, -90, 0);
 
         screen = new Plane(R.drawable.sample360, false);
         new Transform()
@@ -121,43 +109,37 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         screen.setupBorderMaterial(screenMaterial);
     }
 
-//    void setupScreen() {
-//        Transform screenRoot = new Transform()
-//                .setLocalScale(4, 4, 1)
-//                .setLocalRotation(0, 180, 0)
-//                .setLocalPosition(0, 0, -5);
-//
-////        screen = new Plane();
-//        screen = new Plane(R.drawable.sample360, false);
-//
-//        new Transform()
-//                .setParent(screenRoot, false)
-//                .setLocalRotation(0, 0, 180)
-//                .addComponent(screen);
-//
-////        BorderMaterial screenMaterial = new BorderMaterial();
-////        screenMaterial.setTexture(RenderObject.loadTexture(R.drawable.sample360));
-////        screen.setupBorderMaterial(screenMaterial);
-//    }
+    void setupThumbnailGrid() {
+        int count = 0;
+        for (int i = 0; i < GRID_Y; i++) {
+            for (int j = 0; j < GRID_X; j++) {
+                if (count < images.size()) {
+                    Transform image = new Transform();
+                    image.setLocalPosition(-4 + j * 2, 3 - i * 3, -5);
+                    Plane imgPlane = new Plane();
+                    thumbnails.add(imgPlane);
+                    BorderMaterial material = new BorderMaterial();
+                    imgPlane.setupBorderMaterial(material);
+                    image.addComponent(imgPlane);
+                }
+                count++;
+            }
+        }
+    }
 
-
-
-//    void setupScreen() {
-//        Transform screenRoot = new Transform()
-//                .setLocalScale(4, 4, 1)
-//                .setLocalRotation(0, -90, 0)
-//                .setLocalPosition(-5, 0, 0);
-//
-//        screen = new Plane();
-//        new Transform()
-//                .setParent(screenRoot, false)
-//                .setLocalRotation(0, 0, 180)
-//                .addComponent(screen);
-//
-//        BorderMaterial screenMaterial = new BorderMaterial();
-//        screenMaterial.setTexture(RenderObject.loadTexture(R.drawable.sample360));
-//        screen.setupBorderMaterial(screenMaterial);
-//    }
+    void updateThumbnails() {
+        int count = 0;
+        for (int i = 0; i < GRID_Y; i++) {
+            for (int j = 0; j < GRID_X; j++) {
+                if(count < thumbnails.size() && count < images.size()) {
+                    Plane imgPlane = thumbnails.get(count);
+                    Image image = images.get(count);
+                    image.show(cardboardView, imgPlane);
+                }
+                count++;
+            }
+        }
+    }
 
     void showImage(Image image) {
         UnlitTexMaterial bgMaterial = (UnlitTexMaterial) photosphere.getMaterial();
@@ -183,7 +165,33 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     @Override
     public void postDraw() {
+        selectObject();
+    }
 
+    void selectObject() {
+        selectedThumbnail = -1;
+        int iThumbnail = 0;
+        for (Plane plane : thumbnails) {
+            BorderMaterial material = (BorderMaterial) plane.getMaterial();
+            if (plane.isLooking) {
+                selectedThumbnail = iThumbnail;
+                material.borderColor = selectedColor;
+//                if(gridUpdateLock)
+//                    material.borderColor = invalidColor;
+            } else {
+                material.borderColor = normalColor;
+            }
+            iThumbnail++;
+        }
+    }
+
+    @Override
+    public void onCardboardTrigger() {
+        String TAG = "onCardoboardTrigger";
+        Log.d(TAG, ""+selectedThumbnail);
+        if (selectedThumbnail > -1) {
+            showImage(images.get(selectedThumbnail));
+        }
     }
 
     int loadImageList(String path) {
@@ -194,13 +202,15 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         Log.d(TAG, "Length: "+ file.length);
         if (file==null)
             return 0;
-        for (int i = 0; i < file.length; i++) {
-            if (Image.isValidImage(file[i].getName())) {
-                Image img = new Image(path + "/" + file[i].getName());
-                images.add(img);
-                Log.d(TAG, file[i].getName());
+//        for(int j = 0; j < 5; j++) { //Artificially duplicate image list
+            for (int i = 0; i < file.length; i++) {
+                if (Image.isValidImage(file[i].getName())) {
+                    Image img = new Image(path + "/" + file[i].getName());
+                    images.add(img);
+                    Log.d(TAG, file[i].getName());
+                }
             }
-        }
+//        }
         return file.length;
     }
 }
