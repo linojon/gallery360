@@ -25,7 +25,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     final int GRID_X = 5;
     final int GRID_Y = 3;
 
-    public static boolean cancelUpdate;
+    public static boolean cancelUpdate = false;
+    static boolean gridUpdateLock = false;
 
     final int DEFAULT_BACKGROUND = R.drawable.bg;
     final String imagesPath = "/storage/emulated/0/DCIM/Camera";
@@ -88,12 +89,6 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         setupThumbnailGrid();
         setupScrollButtons();
         updateThumbnails();
-//        new Thread() {
-//            @Override
-//            public void run() {
-//                updateThumbnails();
-//            }
-//        }.start();
 
 //        showImage(images.get(0));
 //        showImage(images.get(images.size()-1));
@@ -162,40 +157,57 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     }
 
     void updateThumbnails() {
-        int count = 0;
-        int texCount = thumbOffset;
-        for (int i = 0; i < GRID_Y; i++) {
-            for (int j = 0; j < GRID_X; j++) {
-                if(count < thumbnails.size()) {
-                    Plane imgPlane = thumbnails.get(count);
-                    if (texCount < images.size()) {
-                        Image image = images.get(texCount);
-                        image.showThumbnail(cardboardView, imgPlane);
-                        imgPlane.enabled = true;
-                    } else {
-                        imgPlane.enabled = false;
+        gridUpdateLock = true;
+        new Thread() {
+            @Override
+            public void run() {
+
+                int count = 0;
+                int texCount = thumbOffset;
+                for (int i = 0; i < GRID_Y; i++) {
+                    for (int j = 0; j < GRID_X; j++) {
+                        if (cancelUpdate)
+                            return;
+                        if (count < thumbnails.size()) {
+                            Plane imgPlane = thumbnails.get(count);
+                            if (texCount < images.size()) {
+                                Image image = images.get(texCount);
+                                image.showThumbnail(cardboardView, imgPlane);
+                                imgPlane.enabled = true;
+                            } else {
+                                imgPlane.enabled = false;
+                            }
+                        }
+                        count++;
+                        texCount++;
                     }
                 }
-                count++;
-                texCount++;
+                cancelUpdate = false;
+                gridUpdateLock = false;
             }
-        }
+        }.start();
     }
 
-    void showImage(Image image) {
-        UnlitTexMaterial bgMaterial = (UnlitTexMaterial) photosphere.getMaterial();
-        Log.d(TAG, "!!! "+bgMaterial.name);
+    void showImage(final Image image) {
+        new Thread() {
+            @Override
+            public void run() {
+
+                UnlitTexMaterial bgMaterial = (UnlitTexMaterial) photosphere.getMaterial();
+                Log.d(TAG, "!!! " + bgMaterial.name);
 //        image.clear();
-        image.loadFullTexture(cardboardView);
-        if (image.isPhotosphere()) {
-            Log.d(TAG,"!!! is photosphere");
-            bgMaterial.setTexture(image.textureHandle);
-            screen.enabled = false;
-        } else {
-            bgMaterial.setTexture(bgTextureHandle);
-            screen.enabled = true;
-            image.show(cardboardView, screen);
-        }
+                image.loadFullTexture(cardboardView);
+                if (image.isPhotosphere()) {
+                    Log.d(TAG, "!!! is photosphere");
+                    bgMaterial.setTexture(image.textureHandle);
+                    screen.enabled = false;
+                } else {
+                    bgMaterial.setTexture(bgTextureHandle);
+                    screen.enabled = true;
+                    image.show(cardboardView, screen);
+                }
+            }
+        }.start();
     }
 
 
@@ -217,8 +229,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             if (plane.isLooking) {
                 selectedThumbnail = iThumbnail;
                 material.borderColor = selectedColor;
-//                if(gridUpdateLock)
-//                    material.borderColor = invalidColor;
+                if(gridUpdateLock)
+                    material.borderColor = invalidColor;
             } else {
                 material.borderColor = normalColor;
             }
@@ -246,16 +258,15 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     public void onCardboardTrigger() {
         String TAG = "onCardoboardTrigger";
         Log.d(TAG, ""+selectedThumbnail);
-        boolean update = false;
+
+        if (gridUpdateLock) {
+            vibrator.vibrate(new long[]{0,50,30,50}, -1);
+            return;
+        }
 
         if (selectedThumbnail > -1) {
-            final Image image = images.get(selectedThumbnail);
-            cardboardView.queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    showImage(image);
-                }
-            });
+            Image image = images.get(selectedThumbnail + thumbOffset);
+            showImage(image);
         }
         if (upSelected) {
             // scroll up
@@ -263,7 +274,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             if (thumbOffset < 0) {
                 thumbOffset = images.size() - GRID_X;
             }
-            update = true;
+            updateThumbnails();
         }
         if (downSelected) {
             // scroll down
@@ -272,27 +283,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             } else {
                 thumbOffset = 0;
             }
-            update = true;
+            updateThumbnails();
         }
-        // using Runnable
-        if (update) {
-            Log.d(TAG, "thumbOffset=" + thumbOffset);
-            cardboardView.queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    updateThumbnails();
-                }
-            });
-        }
-        // using Thread
-//        if (update) {
-//            new Thread() {
-//                @Override
-//                public void run() {
-//                    updateThumbnails();
-//                }
-//            }.start();
-//        }
         vibrator.vibrate(25);
     }
 

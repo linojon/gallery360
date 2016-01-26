@@ -87,7 +87,7 @@ public class Image {
         width = options.outWidth;
         height = options.outHeight;
         // A. no thread
-        textureHandle = bitmapToTexture(bitmap);
+//        textureHandle = bitmapToTexture(bitmap);
         // B. thread without cancel/lock
 //        cardboardView.queueEvent(new Runnable() {
 //                                     @Override
@@ -97,19 +97,25 @@ public class Image {
 //                                 }
 //        );
         // C. with cancel/lock
-//        loadLock = true;
-//        cardboardView.queueEvent(new Runnable() {
-//                                     @Override
-//                                     public void run() {
-//                                         if (MainActivity.cancelUpdate)
-//                                             return;
-//                                         textureHandle = bitmapToTexture(bitmap);
-//                                         bitmap.recycle();
-//                                         loadLock = false;
-//                                     }
-//                                 }
-//        );
-
+        loadLock = true;
+        cardboardView.queueEvent(new Runnable() {
+                                     @Override
+                                     public void run() {
+                                         if (MainActivity.cancelUpdate)
+                                             return;
+                                         textureHandle = bitmapToTexture(bitmap);
+                                         bitmap.recycle();
+                                         loadLock = false;
+                                     }
+                                 }
+        );
+        while (loadLock){
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static int bitmapToTexture(Bitmap bitmap){
