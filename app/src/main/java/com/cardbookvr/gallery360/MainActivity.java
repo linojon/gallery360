@@ -32,7 +32,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     final List<Image> images = new ArrayList<>();
     final List<Plane> thumbnails = new ArrayList<>();
-    static int thumbnailsStartOffset = 0;
+    static int thumbOffset = 0;
 
     CardboardView cardboardView;
     Plane screen;
@@ -156,14 +156,21 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     void updateThumbnails() {
         int count = 0;
+        int texCount = thumbOffset;
         for (int i = 0; i < GRID_Y; i++) {
             for (int j = 0; j < GRID_X; j++) {
-                if(count < thumbnails.size() && count < images.size()) {
+                if(count < thumbnails.size()) {
                     Plane imgPlane = thumbnails.get(count);
-                    Image image = images.get(count);
-                    image.showThumbnail(cardboardView, imgPlane);
+                    if (texCount < images.size()) {
+                        Image image = images.get(count);
+                        image.showThumbnail(cardboardView, imgPlane);
+                        imgPlane.enabled = true;
+                    } else {
+                        imgPlane.enabled = false;
+                    }
                 }
                 count++;
+                texCount++;
             }
         }
     }
@@ -232,6 +239,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     public void onCardboardTrigger() {
         String TAG = "onCardoboardTrigger";
         Log.d(TAG, ""+selectedThumbnail);
+        boolean update = false;
+
         if (selectedThumbnail > -1) {
             final Image image = images.get(selectedThumbnail);
             cardboardView.queueEvent(new Runnable() {
@@ -243,9 +252,36 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         }
         if (upSelected) {
             // scroll up
+            thumbOffset -= GRID_X;
+            if (thumbOffset < 0) {
+                thumbOffset = images.size() - GRID_X;
+            }
+            update = true;
         }
         if (downSelected) {
             // scroll down
+            if (thumbOffset < images.size()) {
+                thumbOffset += GRID_X;
+            } else {
+                thumbOffset = 0;
+            }
+            update = true;
+        }
+//        if (update) {
+//            cardboardView.queueEvent(new Runnable() {
+//                @Override
+//                public void run() {
+//                    updateThumbnails();
+//                }
+//            });
+//        }
+        if (update) {
+            new Thread() {
+                @Override
+                public void run() {
+                    updateThumbnails();
+                }
+            }.start();
         }
         vibrator.vibrate(25);
     }
