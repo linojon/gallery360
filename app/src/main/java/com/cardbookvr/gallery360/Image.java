@@ -87,17 +87,30 @@ public class Image {
         }
         width = options.outWidth;
         height = options.outHeight;
+        // A. no thread
+        textureHandle = bitmapToTexture(bitmap);
+        // B. thread without cancel/lock
+//        cardboardView.queueEvent(new Runnable() {
+//                                     @Override
+//                                     public void run() {
+//                                         textureHandle = bitmapToTexture(bitmap);
+//                                     }
+//                                 }
+//        );
+        // C. with cancel/lock
 //        cardboardView.queueEvent(new Runnable() {
 //                                     @Override
 //                                     public void run() {
 //                                         if (MainActivity.cancelUpdate)
 //                                             return;
-                                         textureHandle = bitmapToTexture(bitmap);
+//                                         textureHandle = bitmapToTexture(bitmap);
 //                                         bitmap.recycle();
 //                                         loadLock = false;
 //                                     }
 //                                 }
 //        );
+
+
     }
 
     public static int bitmapToTexture(Bitmap bitmap){

@@ -267,22 +267,24 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             }
             update = true;
         }
-//        if (update) {
-//            cardboardView.queueEvent(new Runnable() {
-//                @Override
-//                public void run() {
-//                    updateThumbnails();
-//                }
-//            });
-//        }
+        // using Runnable
         if (update) {
-            new Thread() {
+            cardboardView.queueEvent(new Runnable() {
                 @Override
                 public void run() {
                     updateThumbnails();
                 }
-            }.start();
+            });
         }
+        // using Thread
+//        if (update) {
+//            new Thread() {
+//                @Override
+//                public void run() {
+//                    updateThumbnails();
+//                }
+//            }.start();
+//        }
         vibrator.vibrate(25);
     }
 
