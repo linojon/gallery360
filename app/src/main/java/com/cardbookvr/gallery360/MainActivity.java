@@ -88,9 +88,16 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         setupThumbnailGrid();
         setupScrollButtons();
         updateThumbnails();
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                updateThumbnails();
+//            }
+//        }.start();
+
 //        showImage(images.get(0));
 //        showImage(images.get(images.size()-1));
-        showImage(images.get(3));
+//        showImage(images.get(3));
     }
 
     void setupBackground() {
@@ -162,7 +169,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
                 if(count < thumbnails.size()) {
                     Plane imgPlane = thumbnails.get(count);
                     if (texCount < images.size()) {
-                        Image image = images.get(count);
+                        Image image = images.get(texCount);
                         image.showThumbnail(cardboardView, imgPlane);
                         imgPlane.enabled = true;
                     } else {
@@ -269,6 +276,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         }
         // using Runnable
         if (update) {
+            Log.d(TAG, "thumbOffset=" + thumbOffset);
             cardboardView.queueEvent(new Runnable() {
                 @Override
                 public void run() {

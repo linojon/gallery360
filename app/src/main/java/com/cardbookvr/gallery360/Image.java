@@ -78,7 +78,6 @@ public class Image {
     }
 
     public void loadTexture(CardboardView cardboardView, int sampleSize){
-//        loadLock = true;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = sampleSize;
         final Bitmap bitmap = BitmapFactory.decodeFile(path, options);
@@ -98,6 +97,7 @@ public class Image {
 //                                 }
 //        );
         // C. with cancel/lock
+//        loadLock = true;
 //        cardboardView.queueEvent(new Runnable() {
 //                                     @Override
 //                                     public void run() {
@@ -109,7 +109,6 @@ public class Image {
 //                                     }
 //                                 }
 //        );
-
 
     }
 
@@ -143,6 +142,13 @@ public class Image {
         material.setTexture(textureHandle);
         calcRotation(screen);
         calcScale(screen);
+//        while (loadLock){
+//            try {
+//                Thread.sleep(100);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     public void showThumbnail(CardboardView cardboardView, Plane thumb) {
@@ -151,6 +157,13 @@ public class Image {
         material.setTexture(textureHandle);
         calcRotation(thumb);
         calcScale(thumb);
+//        while (loadLock){
+//            try {
+//                Thread.sleep(100);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
 
