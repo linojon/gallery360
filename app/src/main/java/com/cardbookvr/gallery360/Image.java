@@ -182,57 +182,55 @@ public class Image {
 //    }
 
     void calcRotation(Plane screen){
-        rotation = null;
+        rotation = new Quaternion();
 
         // use Exif tags to determine orientation, only available in jpg (and jpeg)
         String ext = getExtension(path);
-        if (!ext.equals("jpg") && !ext.equals("jpeg"))
-            return;
+        if (ext.equals("jpg") || ext.equals("jpeg")) {
 
-        try {
-            ExifInterface exif = new ExifInterface(path);
-            //height = exif.getAttribute(ExifInterface.TAG_I);
-            //rotation = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
-            Log.d(TAG, "ORIENTATION: " + exif.getAttribute(ExifInterface.TAG_ORIENTATION) );
-            switch (exif.getAttribute(ExifInterface.TAG_ORIENTATION)){
-                // Correct orientation, but flipped on the horizontal axis
-                case "2":
-                    rotation = new Quaternion().setEulerAngles(180,0,0);
-                    break;
-                // Upside-down
-                case "3":
-                    rotation = new Quaternion().setEulerAngles(0,0,180);
-                    break;
-                // Upside-Down & Flipped along horizontal axis
-                case "4":
-                    rotation = new Quaternion().setEulerAngles(180,0,180);
-                    break;
-                // Turned 90 deg to the left and flipped
-                case "5":
-                    rotation = new Quaternion().setEulerAngles(0,180,90);
-                    break;
-                // Turned 90 deg to the left
-                case "6":
-                    rotation = new Quaternion().setEulerAngles(0,0,-90);
-                    break;
-                // Turned 90 deg to the right and flipped
-                case "7":
-                    rotation = new Quaternion().setEulerAngles(0,180,90);
-                    break;
-                // Turned 90 deg to the right
-                case "8":
-                    rotation = new Quaternion().setEulerAngles(0,0,90);
-                    break;
-                //Correct orientation--do nothing
-                default:
-                    break;
+            try {
+                ExifInterface exif = new ExifInterface(path);
+                //height = exif.getAttribute(ExifInterface.TAG_I);
+                //rotation = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
+                Log.d(TAG, "ORIENTATION: " + exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+                switch (exif.getAttribute(ExifInterface.TAG_ORIENTATION)) {
+                    // Correct orientation, but flipped on the horizontal axis
+                    case "2":
+                        rotation = new Quaternion().setEulerAngles(180, 0, 0);
+                        break;
+                    // Upside-down
+                    case "3":
+                        rotation = new Quaternion().setEulerAngles(0, 0, 180);
+                        break;
+                    // Upside-Down & Flipped along horizontal axis
+                    case "4":
+                        rotation = new Quaternion().setEulerAngles(180, 0, 180);
+                        break;
+                    // Turned 90 deg to the left and flipped
+                    case "5":
+                        rotation = new Quaternion().setEulerAngles(0, 180, 90);
+                        break;
+                    // Turned 90 deg to the left
+                    case "6":
+                        rotation = new Quaternion().setEulerAngles(0, 0, -90);
+                        break;
+                    // Turned 90 deg to the right and flipped
+                    case "7":
+                        rotation = new Quaternion().setEulerAngles(0, 180, 90);
+                        break;
+                    // Turned 90 deg to the right
+                    case "8":
+                        rotation = new Quaternion().setEulerAngles(0, 0, 90);
+                        break;
+                    //Correct orientation--do nothing
+                    default:
+                        break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        if (rotation != null) {
-            screen.transform.setLocalRotation(new Quaternion(rotation));
-        }
+        screen.transform.setLocalRotation(rotation);
     }
 
     void calcScale(Plane screen) {

@@ -1,8 +1,11 @@
 package com.cardbookvr.gallery360;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.cardbook.renderbox.IRenderBox;
@@ -88,6 +91,10 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         loadImageList(imagesPath);
         setupThumbnailGrid();
         setupScrollButtons();
+        Uri intentUri = getIntent().getData();
+        if (intentUri != null) {
+            showUriImage(intentUri);
+        }
         updateThumbnails();
 
 //        showImage(images.get(0));
@@ -186,6 +193,20 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
                 gridUpdateLock = false;
             }
         }.start();
+    }
+
+    void showUriImage(final Uri uri) {
+        Log.d(TAG, "intent data " + uri.getPath());
+        String[] filePathColumn = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getContentResolver().query(uri, filePathColumn, null, null, null);
+        if (cursor.moveToFirst()) {
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            String yourRealPath = cursor.getString(columnIndex);
+            final Image img = new Image(yourRealPath);
+            showImage(img);
+        }
+        // else report image not found error?
+        cursor.close();
     }
 
     void showImage(final Image image) {
