@@ -99,6 +99,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     @Override
     public void setup() {
+        BorderMaterial.destroy();
         setupMaxTextureSize();
         setupBackground();
         setupScreen();
@@ -199,9 +200,12 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             up.enabled = !up.enabled;
         if (down != null)
             down.enabled = !down.enabled;
+        int texCount = thumbOffset;
         for (Plane plane : thumbnails) {
-            if (plane != null)
+            if (texCount < images.size()) {
                 plane.enabled = !plane.enabled;
+            }
+            texCount++;
         }
     }
 
@@ -357,7 +361,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         Log.d(TAG, "Length: "+ file.length);
         if (file==null)
             return 0;
-        for(int j = 0; j < 5; j++) { //Artificially duplicate image list
+        for(int j = 0; j < 2; j++) { //Artificially duplicate image list
             for (int i = 0; i < file.length; i++) {
                 if (Image.isValidImage(file[i].getName())) {
                     Image img = new Image(path + "/" + file[i].getName());

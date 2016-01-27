@@ -18,12 +18,12 @@ import java.io.IOException;
  */
 public class Image {
     final static String TAG = "image";
-    public static boolean loadLock = false;
     public boolean isPhotosphere;
     String path;
     int textureHandle;
     Quaternion rotation;
     int height, width;
+    boolean loadLock = false;
 
     public Image(String path) {
         this.path = path;
