@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.hardware.SensorManager;
 import android.net.Uri;
+import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.provider.MediaStore;
@@ -98,6 +99,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     @Override
     public void setup() {
+        setupMaxTextureSize();
         setupBackground();
         setupScreen();
         loadImageList(imagesPath);
@@ -256,9 +258,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
                 UnlitTexMaterial bgMaterial = (UnlitTexMaterial) photosphere.getMaterial();
                 Log.d(TAG, "!!! " + bgMaterial.name);
-//        image.clear();
                 image.loadFullTexture(cardboardView);
-                if (image.isPhotosphere()) {
+                if (image.isPhotosphere) {
                     Log.d(TAG, "!!! is photosphere");
                     bgMaterial.setTexture(image.textureHandle);
                     screen.enabled = false;
@@ -270,7 +271,6 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             }
         }.start();
     }
-
 
     @Override
     public void preDraw() {
@@ -367,5 +367,16 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
             }
         }
         return file.length;
+    }
+
+    //TODO: put in RenderBox
+    static int MAX_TEXTURE_SIZE = 2048;
+
+    void setupMaxTextureSize() {
+        //get max texture size
+        int[] maxTextureSize = new int[1];
+        GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSize, 0);
+        MAX_TEXTURE_SIZE = maxTextureSize[0];
+        Log.i(TAG, "Max texture size = " + MAX_TEXTURE_SIZE);
     }
 }

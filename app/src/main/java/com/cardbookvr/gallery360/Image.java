@@ -19,15 +19,15 @@ import java.io.IOException;
 public class Image {
     final static String TAG = "image";
     public static boolean loadLock = false;
+    public boolean isPhotosphere;
     String path;
     int textureHandle;
     Quaternion rotation;
     int height, width;
 
-    static int MAX_TEXTURE_SIZE = 2048;
-
     public Image(String path) {
         this.path = path;
+        isPhotosphere = path.toLowerCase().contains("pano");
     }
 
     public static boolean isValidImage(String path){
@@ -43,10 +43,6 @@ public class Image {
                 return true;
         }
         return false;
-    }
-
-    public boolean isPhotosphere() {
-        return path.toLowerCase().contains("pano");
     }
 
     static String getExtension(String path){
@@ -65,16 +61,9 @@ public class Image {
             options.inSampleSize = sampleSize;
             BitmapFactory.decodeFile(path, options);
             sampleSize *= 2;
-        } while (options.outWidth > MAX_TEXTURE_SIZE || options.outHeight > MAX_TEXTURE_SIZE);
+        } while (options.outWidth > MainActivity.MAX_TEXTURE_SIZE || options.outHeight > MainActivity.MAX_TEXTURE_SIZE);
         sampleSize /= 2;
         loadTexture(cardboardView, sampleSize);
-//        while (loadLock){
-//            try {
-//                Thread.sleep(100);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
     }
 
     public void loadTexture(CardboardView cardboardView, int sampleSize){
@@ -148,13 +137,6 @@ public class Image {
         material.setTexture(textureHandle);
         calcRotation(screen);
         calcScale(screen);
-//        while (loadLock){
-//            try {
-//                Thread.sleep(100);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
     }
 
     public void showThumbnail(CardboardView cardboardView, Plane thumb) {
@@ -163,13 +145,6 @@ public class Image {
         material.setTexture(textureHandle);
         calcRotation(thumb);
         calcScale(thumb);
-//        while (loadLock){
-//            try {
-//                Thread.sleep(100);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
     }
 
 
