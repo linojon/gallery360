@@ -2,11 +2,13 @@ package com.cardbookvr.gallery360;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.OrientationEventListener;
 
 import com.cardbook.renderbox.IRenderBox;
 import com.cardbook.renderbox.RenderBox;
@@ -54,6 +56,10 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     BorderMaterial upMaterial, downMaterial;
     boolean upSelected, downSelected;
 
+    OrientationEventListener orientationEventListener;
+    long tiltTime;
+    int tiltDamper = 1000;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         cancelUpdate = false;
@@ -65,6 +71,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         cardboardView.setRenderer(new RenderBox(this, this));
         setCardboardView(cardboardView);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        setupOrientationListener();
     }
 
     @Override
@@ -82,7 +89,12 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         super.onPause();
         cancelUpdate = true;
     }
-
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
+        orientationEventListener.disable();
+    }
 
     @Override
     public void setup() {
@@ -161,6 +173,34 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
                 .setLocalPosition(0, -6, -5)
                 .setLocalRotation(0, 0, 180)
                 .addComponent(down);
+    }
+
+    void setupOrientationListener() {
+        orientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                if(System.currentTimeMillis() - tiltTime > tiltDamper) {
+                    if (orientation == 0 || orientation == 180) {
+                        Log.d(TAG, "tilt up!");
+                        toggleGridMenu();
+                    }
+                    tiltTime = System.currentTimeMillis();
+                }
+            }
+        };
+        if(orientationEventListener.canDetectOrientation())
+            orientationEventListener.enable();
+    }
+
+    void toggleGridMenu() {
+        if (up != null)
+            up.enabled = !up.enabled;
+        if (down != null)
+            down.enabled = !down.enabled;
+        for (Plane plane : thumbnails) {
+            if (plane != null)
+                plane.enabled = !plane.enabled;
+        }
     }
 
     void updateThumbnails() {
