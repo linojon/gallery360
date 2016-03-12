@@ -67,17 +67,18 @@ public class Image {
     }
 
     public void loadTexture(CardboardView cardboardView, int sampleSize){
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = sampleSize;
-        final Bitmap bitmap = BitmapFactory.decodeFile(path, options);
-        if(bitmap == null){
-            throw new RuntimeException("Error loading bitmap.");
-        }
-        width = options.outWidth;
-        height = options.outHeight;
-        // A. no thread
+        if(textureHandle == 0) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = sampleSize;
+            final Bitmap bitmap = BitmapFactory.decodeFile(path, options);
+            if (bitmap == null) {
+                throw new RuntimeException("Error loading bitmap.");
+            }
+            width = options.outWidth;
+            height = options.outHeight;
+            // A. no thread
 //        textureHandle = bitmapToTexture(bitmap);
-        // B. thread without cancel/lock
+            // B. thread without cancel/lock
 //        cardboardView.queueEvent(new Runnable() {
 //                                     @Override
 //                                     public void run() {
@@ -85,24 +86,25 @@ public class Image {
 //                                     }
 //                                 }
 //        );
-        // C. with cancel/lock
-        loadLock = true;
-        cardboardView.queueEvent(new Runnable() {
-                                     @Override
-                                     public void run() {
-                                         if (MainActivity.cancelUpdate)
-                                             return;
-                                         textureHandle = bitmapToTexture(bitmap);
-                                         bitmap.recycle();
-                                         loadLock = false;
+            // C. with cancel/lock
+            loadLock = true;
+            cardboardView.queueEvent(new Runnable() {
+                                         @Override
+                                         public void run() {
+                                             if (MainActivity.cancelUpdate)
+                                                 return;
+                                             textureHandle = bitmapToTexture(bitmap);
+                                             bitmap.recycle();
+                                             loadLock = false;
+                                         }
                                      }
-                                 }
-        );
-        while (loadLock){
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            );
+            while (loadLock) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
