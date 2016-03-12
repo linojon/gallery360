@@ -13,6 +13,7 @@ import android.view.OrientationEventListener;
 
 import com.cardbook.renderbox.IRenderBox;
 import com.cardbook.renderbox.RenderBox;
+import com.cardbook.renderbox.Time;
 import com.cardbook.renderbox.Transform;
 import com.cardbook.renderbox.components.Camera;
 import com.cardbook.renderbox.components.RenderObject;
@@ -22,6 +23,8 @@ import com.google.vrtoolkit.cardboard.CardboardActivity;
 import com.google.vrtoolkit.cardboard.CardboardView;
 
 import java.io.File;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +41,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     final String imagesPath = "/storage/emulated/0/DCIM/Camera";
 
     final List<Image> images = new ArrayList<>();
-    final List<Plane> thumbnails = new ArrayList<>();
+    final List<Thumbnail> thumbnails = new ArrayList<>();
     static int thumbOffset = 0;
 
     CardboardView cardboardView;
@@ -49,7 +52,9 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     final float[] selectedColor = new float[]{0, 0.5f, 0.5f, 1};
     final float[] invalidColor = new float[]{0.5f, 0, 0, 1};
     final float[] normalColor = new float[]{0, 0, 0, 1};
-    int selectedThumbnail = -1;
+    final float selectedScale = 1.25f;
+    final float normalScale = 0.85f;
+    Thumbnail selectedThumbnail = null;
 
     private Vibrator vibrator;
 
@@ -60,6 +65,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     OrientationEventListener orientationEventListener;
     long tiltTime;
     int tiltDamper = 1000;
+    boolean interfaceVisible = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,13 +154,32 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         for (int i = 0; i < GRID_Y; i++) {
             for (int j = 0; j < GRID_X; j++) {
                 if (count < images.size()) {
+                    Thumbnail thumb = new Thumbnail(cardboardView);
+                    thumbnails.add(thumb);
+
                     Transform image = new Transform();
                     image.setLocalPosition(-4 + j * 2, 3 - i * 3, -5);
                     Plane imgPlane = new Plane();
-                    thumbnails.add(imgPlane);
+                    thumb.plane = imgPlane;
                     BorderMaterial material = new BorderMaterial();
                     imgPlane.setupBorderMaterial(material);
                     image.addComponent(imgPlane);
+
+                    Transform sphere = new Transform();
+                    sphere.setLocalPosition(-4 + j * 2, 3 - i * 3, -5);
+                    sphere.setLocalRotation(180, 0, 0);
+                    sphere.setLocalScale(normalScale, normalScale, normalScale);
+                    //This is an alternative to calling setBuffers yourself, but I don't know if I like setting it up with some arbitrary image
+                    Sphere imgSphere = new Sphere(R.drawable.bg, false);
+//                    Sphere imgSphere = new Sphere();
+//                    UnlitTexMaterial sphereMaterial = new UnlitTexMaterial();
+//                    sphereMaterial.setBuffers(Sphere.vertexBuffer, Sphere.texCoordBuffer, Sphere.indexBuffer, Sphere.numIndices);
+//                    imgSphere.setMaterial(material);
+                    thumb.sphere = imgSphere;
+                    sphere.addComponent(imgSphere);
+
+                    //Not sure why I have to do this for your version and not mine...
+                    thumb.setVisible(false);
                 }
                 count++;
             }
@@ -196,14 +221,15 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     }
 
     void toggleGridMenu() {
+        interfaceVisible = !interfaceVisible;
         if (up != null)
             up.enabled = !up.enabled;
         if (down != null)
             down.enabled = !down.enabled;
         int texCount = thumbOffset;
-        for (Plane plane : thumbnails) {
-            if (texCount < images.size()) {
-                plane.enabled = !plane.enabled;
+        for (Thumbnail thumb : thumbnails) {
+            if (texCount < images.size() && thumb != null) {
+                thumb.setVisible(interfaceVisible);
             }
             texCount++;
         }
@@ -222,13 +248,12 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
                         if (cancelUpdate)
                             return;
                         if (count < thumbnails.size()) {
-                            Plane imgPlane = thumbnails.get(count);
+                            Thumbnail thumb = thumbnails.get(count);
                             if (texCount < images.size()) {
-                                Image image = images.get(texCount);
-                                image.showThumbnail(cardboardView, imgPlane);
-                                imgPlane.enabled = true;
+                                thumb.setImage(images.get(texCount));
+                                thumb.setVisible(true);
                             } else {
-                                imgPlane.enabled = false;
+                                thumb.setVisible(false);
                             }
                         }
                         count++;
@@ -287,19 +312,33 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     }
 
     void selectObject() {
-        selectedThumbnail = -1;
-        int iThumbnail = 0;
-        for (Plane plane : thumbnails) {
-            BorderMaterial material = (BorderMaterial) plane.getMaterial();
-            if (plane.isLooking) {
-                selectedThumbnail = iThumbnail;
-                material.borderColor = selectedColor;
-                if(gridUpdateLock)
-                    material.borderColor = invalidColor;
+        float deltaTime = Time.getDeltaTime();
+        selectedThumbnail = null;
+        for (Thumbnail thumb : thumbnails) {
+            if(thumb.image == null)
+                return;
+            if(thumb.image.isPhotosphere) {
+                Sphere sphere = thumb.sphere;
+                if (sphere.isLooking) {
+                    selectedThumbnail = thumb;
+                    if (!gridUpdateLock)
+                        sphere.transform.setLocalScale(selectedScale,selectedScale,selectedScale);
+                } else {
+                    sphere.transform.setLocalScale(normalScale,normalScale,normalScale);
+                }
+                sphere.transform.rotate(0,10 * deltaTime,0);
             } else {
-                material.borderColor = normalColor;
+                Plane plane = thumb.plane;
+                BorderMaterial material = (BorderMaterial) plane.getMaterial();
+                if (plane.isLooking) {
+                    selectedThumbnail = thumb;
+                    material.borderColor = selectedColor;
+                    if (gridUpdateLock)
+                        material.borderColor = invalidColor;
+                } else {
+                    material.borderColor = normalColor;
+                }
             }
-            iThumbnail++;
         }
 
         if (up.isLooking) {
@@ -325,13 +364,13 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         Log.d(TAG, ""+selectedThumbnail);
 
         if (gridUpdateLock) {
+            Log.d(TAG, "updatelock");
             vibrator.vibrate(new long[]{0,50,30,50}, -1);
             return;
         }
 
-        if (selectedThumbnail > -1) {
-            Image image = images.get(selectedThumbnail + thumbOffset);
-            showImage(image);
+        if (selectedThumbnail != null) {
+            showImage(selectedThumbnail.image);
         }
         if (upSelected) {
             // scroll up

@@ -23,8 +23,6 @@ public class Triangle extends RenderObject {
 			1   2   4
 	 */
 
-    private static final float YAW_LIMIT = 0.15f;
-    private static final float PITCH_LIMIT = 0.15f;
     public static final float[] COORDS = new float[] {
             0f, 1.0f, 0.0f,
             -1.0f, -1.0f, 0.0f,
@@ -86,30 +84,5 @@ public class Triangle extends RenderObject {
     public void setupBorderMaterial(BorderMaterial material){
         this.material = material;
         material.setBuffers(vertexBuffer, texCoordBuffer, indexBuffer, numIndices);
-    }
-
-    @Override
-    public void draw(float[] view, float[] perspective) {
-        super.draw(view, perspective);
-        if(!enabled)
-            return;
-        isLooking = isLookingAtObject();
-    }
-    //This should eventually go into RenderObject, or some kind of postdraw callback
-    public boolean isLooking;
-    final float[] modelView = new float[16];
-
-    private boolean isLookingAtObject() {
-        float[] initVec = { 0, 0, 0, 1.0f };
-        float[] objPositionVec = new float[4];
-
-        // Convert object space to camera space. Use the headView from onNewFrame.
-        Matrix.multiplyMM(modelView, 0, RenderBox.headView, 0, model, 0);
-        Matrix.multiplyMV(objPositionVec, 0, modelView, 0, initVec, 0);
-
-        float pitch = (float) Math.atan2(objPositionVec[1], -objPositionVec[2]);
-        float yaw = (float) Math.atan2(objPositionVec[0], -objPositionVec[2]);
-
-        return Math.abs(pitch) < PITCH_LIMIT && Math.abs(yaw) < YAW_LIMIT;
     }
 }

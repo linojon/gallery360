@@ -23,7 +23,7 @@ public class Image {
     int textureHandle;
     Quaternion rotation;
     int height, width;
-    boolean loadLock = false;
+    public static boolean loadLock = false;
 
     public Image(String path) {
         this.path = path;
