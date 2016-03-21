@@ -36,6 +36,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     public static boolean cancelUpdate = false;
     static boolean gridUpdateLock = false;
+    static boolean setupComplete = false;
 
     final int DEFAULT_BACKGROUND = R.drawable.bg;
     final String imagesPath = "/storage/emulated/0/DCIM/Camera";
@@ -63,9 +64,9 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     boolean upSelected, downSelected;
 
     OrientationEventListener orientationEventListener;
-    long tiltTime;
-    int tiltDamper = 1000;
     boolean interfaceVisible = true;
+    int orientThreshold = 10;
+    boolean orientFlip = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +106,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 
     @Override
     public void setup() {
+        Log.d(TAG, "setup");
         BorderMaterial.destroy();
         setupMaxTextureSize();
         setupBackground();
@@ -121,6 +123,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
 //        showImage(images.get(0));
 //        showImage(images.get(images.size()-1));
 //        showImage(images.get(3));
+        setupComplete = true;
     }
 
     void setupBackground() {
@@ -207,12 +210,17 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         orientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
             @Override
             public void onOrientationChanged(int orientation) {
-                if(System.currentTimeMillis() - tiltTime > tiltDamper) {
-                    if (orientation == 0 || orientation == 180) {
-                        Log.d(TAG, "tilt up!");
+                if(gridUpdateLock || !setupComplete)
+                    return;
+                if(Math.abs(orientation) < orientThreshold || Math.abs(orientation - 180) < orientThreshold){     //"close enough" to portrait mode
+                    if(!orientFlip) {
+                        Log.d(TAG, "tilt up! " + orientation);
                         toggleGridMenu();
                     }
-                    tiltTime = System.currentTimeMillis();
+                    orientFlip = true;
+                }
+                if(Math.abs(orientation - 90) < orientThreshold || Math.abs(orientation - 270) < orientThreshold) {     //"close enough" to landscape mode
+                    orientFlip = false;
                 }
             }
         };
@@ -221,6 +229,7 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
     }
 
     void toggleGridMenu() {
+        vibrator.vibrate(25);
         interfaceVisible = !interfaceVisible;
         if (up != null)
             up.enabled = !up.enabled;
