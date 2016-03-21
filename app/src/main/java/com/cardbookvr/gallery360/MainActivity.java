@@ -279,6 +279,8 @@ public class MainActivity extends CardboardActivity implements IRenderBox {
         Log.d(TAG, "intent data " + uri.getPath());
         String[] filePathColumn = {MediaStore.Images.Media.DATA};
         Cursor cursor = getContentResolver().query(uri, filePathColumn, null, null, null);
+        if(cursor == null)      //Cursor can be null?
+            return;
         if (cursor.moveToFirst()) {
             int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
             String yourRealPath = cursor.getString(columnIndex);
